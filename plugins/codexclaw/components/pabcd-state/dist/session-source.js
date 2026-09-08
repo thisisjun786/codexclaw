@@ -20,9 +20,9 @@ function gitIdentity(cwd        )                                               
   const git = (...args          ) => execFileSync("git", args, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
   try {
     return {
-      root: realpathSync(git("rev-parse", "--show-toplevel")),
-      commonDir: realpathSync(git("rev-parse", "--path-format=absolute", "--git-common-dir")),
-      gitDir: realpathSync(git("rev-parse", "--absolute-git-dir")),
+      root: realpathSync.native(git("rev-parse", "--show-toplevel")),
+      commonDir: realpathSync.native(git("rev-parse", "--path-format=absolute", "--git-common-dir")),
+      gitDir: realpathSync.native(git("rev-parse", "--absolute-git-dir")),
     };
   } catch { throw new Error("Cannot resolve source Git worktree identity."); }
 }
@@ -59,7 +59,7 @@ function readBinding(cwd        , sessionId        )                       {
   finally { closeSync(fd); }
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("Invalid source binding.");
   const b = raw                           ;
-  if (b.version !== 1 || b.ownerSessionId !== sessionId || b.nativeCwd !== realpathSync(cwd)
+  if (b.version !== 1 || b.ownerSessionId !== sessionId || b.nativeCwd !== realpathSync.native(cwd)
       || ![b.sourceRoot, b.commonDir, b.gitDir].every(p => typeof p === "string" && isAbsolute(p))) {
     throw new Error("Source binding has invalid identity or paths.");
   }
@@ -87,8 +87,9 @@ export function resolveSessionSource(cwd        , sessionId        )         {
 /** Caller must corroborate native identity and inspect the existing state first. */
 export function bindSessionSource(cwd        , sessionId        , target        )         {
   if (!isAbsolute(target)) throw new Error("Source worktree path must be absolute.");
-  const nativeCwd = realpathSync(cwd);
-  const sourceRoot = realpathSync(target);
+  // Git expands Windows 8.3 aliases; the JS realpath implementation may retain them.
+  const nativeCwd = realpathSync.native(cwd);
+  const sourceRoot = realpathSync.native(target);
   const native = gitIdentity(cwd), source = gitIdentity(sourceRoot);
   if (source.root !== sourceRoot || source.commonDir !== native.commonDir || source.gitDir === native.gitDir) {
     throw new Error("Source must be a linked worktree root in the native session's repository.");
