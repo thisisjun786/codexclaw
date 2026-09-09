@@ -59,3 +59,14 @@ re-trust through Codex.
 Skills, hooks, and MCP tools are read when a session starts. Open a new Codex thread after
 reinstalling.
 :::
+
+## Jun's local integration track
+
+The install baseline for this checkout and the `thisisjun786/codexclaw` fork is `codex/local-integration`.
+
+- Keep `/home/jun/code/codexclaw` on this branch and preserve it in the personal fork.
+- Fetch and merge upstream `dev` into this branch; preserve local features when resolving conflicts.
+- Keep Architect and account-specific model discovery until equivalent upstream implementations are verified.
+- Build both components and GUI from the integration revision before installing. Restart owned previews from the installed copy.
+- Verify Architect and account-specific catalog entries after updates. Preserve role settings and back up the previous installed payload.
+- Use separate branches for upstream PRs. Upstream acceptance is independent of preserving local features. Never replace the integration branch with vanilla upstream or force-update shared fork branches.
