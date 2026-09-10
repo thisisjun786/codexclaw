@@ -131,7 +131,10 @@ test("WP7/G19: every manifest hook command resolves to an existing dist entrypoi
   // pre-tool-use-guarding-managed-worktree-deletion).
   // 260909 wp1-A: 23 -> 24 with the memory-write gate
   // (pre-tool-use-guarding-memory-write).
-  assert.ok(Array.isArray(manifest.hooks) && manifest.hooks.length === 25, "expected 25 declared hooks");
+  // 260910: 25 -> 28 with bg-wake's three hooks. The pin is deliberate — it is the
+  // machine-checked partner of the README badges and inventory.json, so an optional
+  // component removes itself here too (see `cxc bg removal`).
+  assert.ok(Array.isArray(manifest.hooks) && manifest.hooks.length === 28, "expected 28 declared hooks");
   for (const rel of manifest.hooks) {
     const { distAbs } = readHookCommand(rel);
     // Settle-retry: a concurrent rebuild (C10) may briefly unlink dist mid-run.
@@ -718,7 +721,7 @@ test("agbrowse: user-prompt-submit hook e2e - natural language agbrowse request 
 // lazygap_impl 010: SubagentStop evidence-receipt gate. A gated worker child with no
 // receipt must be blocked (decision:block); a valid receipt under .codexclaw/evidence/
 // releases. Drives the real dist entrypoint via the manifest command.
-test("L010: subagent-stop hook e2e - worker w/o receipt blocks, valid receipt releases", () => {
+for (const agentType of ["executor", "worker"]) test(`L010: subagent-stop hook e2e - ${agentType} w/o receipt blocks, valid receipt releases`, () => {
   const { event, hookEvent, distAbs } = readHookCommand("./hooks/subagent-stop-verifying-evidence.json");
   assert.equal(event, "SubagentStop");
   const ep = snapshotEntrypoint(distAbs);
@@ -728,7 +731,7 @@ test("L010: subagent-stop hook e2e - worker w/o receipt blocks, valid receipt re
     // 1) worker, no receipt -> block with the EVIDENCE_RECORDED contract.
     const blocked = runHook(ep, hookEvent, {
       hook_event_name: "SubagentStop", session_id: "s1", cwd: tmp,
-      agent_type: "worker", agent_id: "a1", last_assistant_message: "all done!",
+      agent_type: agentType, agent_id: "a1", last_assistant_message: "all done!",
     });
     assert.equal(blocked.status, 0, blocked.stderr);
     const out = JSON.parse(blocked.stdout);
@@ -748,7 +751,7 @@ test("L010: subagent-stop hook e2e - worker w/o receipt blocks, valid receipt re
     writeFileSync(join(tmp, ".codexclaw", "evidence", "p.md"), "tests green");
     const ok = runHook(ep, hookEvent, {
       hook_event_name: "SubagentStop", session_id: "s3", cwd: tmp,
-      agent_type: "worker", agent_id: "a3",
+      agent_type: agentType, agent_id: "a3",
       last_assistant_message: "done.\nEVIDENCE_RECORDED: .codexclaw/evidence/p.md",
     });
     assert.equal(ok.status, 0, ok.stderr);
